@@ -39,6 +39,7 @@ import CompanyProfile from './pages/Company/CompanyProfile';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ManageInstitutions from './pages/Admin/ManageInstitutions';
 import ManageCompanies from './pages/Admin/ManageCompanies';
+import ManageUsers from './pages/Admin/ManageUsers';
 import SystemReports from './pages/Admin/SystemReports';
 
 import './styles/App.css';
@@ -172,6 +173,11 @@ function App() {
               <Route path="/admin/companies" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <ManageCompanies />
+                </ProtectedRoute>
+              } />
+               <Route path="/admin/users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <ManageUsers />
                 </ProtectedRoute>
               } />
               <Route path="/admin/reports" element={

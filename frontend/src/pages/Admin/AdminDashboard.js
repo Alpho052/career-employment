@@ -89,6 +89,9 @@ const AdminDashboard = () => {
           <Link to="/admin/companies" className="btn btn-secondary">
             Manage Companies
           </Link>
+          <Link to="/admin/users" className="btn btn-info">
+            Manage Users
+          </Link>
           <Link to="/admin/reports" className="btn btn-outline">
             System Reports
           </Link>

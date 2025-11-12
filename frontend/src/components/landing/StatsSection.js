@@ -22,7 +22,6 @@ const StatsSection = () => {
   }, []);
 
   const statItems = [
-    { label: 'Students', value: stats.students || 0 },
     { label: 'Institutions', value: stats.institutions || 0 },
     { label: 'Companies', value: stats.companies || 0 },
     { label: 'Jobs Available', value: stats.jobs || 0 }
