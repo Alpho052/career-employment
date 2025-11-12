@@ -66,6 +66,7 @@ router.get('/test', (req, res) => {
 });
 
 module.exports = router;*/
+
 const express = require('express');
 const router = express.Router();
 const {
@@ -85,48 +86,49 @@ const {
   getUsers,
   publishAdmissions,
   migrateCompanies,
-  deleteUser // ✅ make sure this one is included in controller
+  deleteUser
 } = require('../controllers/adminController');
+
 const { authenticate, authorize } = require('../middleware/auth');
 
-// All routes require admin authentication
+// ✅ All routes require admin authentication
 router.use(authenticate);
 router.use(authorize('admin'));
 
-// System statistics
+// ===== System Statistics =====
 router.get('/stats', getSystemStats);
 
-// Institution management
+// ===== Institution Management =====
 router.get('/institutions', getInstitutions);
 router.post('/institutions', createInstitution);
 router.put('/institutions/:institutionId', updateInstitution);
 router.put('/institutions/:institutionId/status', updateInstitutionStatus);
 router.delete('/institutions/:institutionId', deleteInstitution);
 
-// Institution courses management
+// ===== Institution Courses =====
 router.get('/institutions/:institutionId/courses', getInstitutionCourses);
 router.post('/institutions/:institutionId/courses', addInstitutionCourse);
 
-// Course management
+// ===== Course Management =====
 router.put('/courses/:courseId', updateCourse);
 router.delete('/courses/:courseId', deleteCourse);
 
-// Company management
+// ===== Company Management =====
 router.get('/companies', getCompanies);
 router.put('/companies/:companyId/status', updateCompanyStatus);
 router.delete('/companies/:companyId', deleteCompany);
 
-// Admissions management
+// ===== Admissions Management =====
 router.post('/admissions/publish', publishAdmissions);
 
-// Migration endpoint (one-time, admin only)
+// ===== Migration Endpoint (admin only) =====
 router.post('/migrate/companies', migrateCompanies);
 
-// User management
+// ===== User Management =====
 router.get('/users', getUsers);
-router.delete('/users/:userId', deleteUser); // ✅ added delete user route
+router.delete('/users/:userId', deleteUser);
 
-// Test route
+// ===== Test Route =====
 router.get('/test', (req, res) => {
   res.json({
     success: true,
