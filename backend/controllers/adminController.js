@@ -1,5 +1,6 @@
 const { db, auth } = require('../config/firebase');
-const { sendEmail } = require('../utils/email'); // if you have this
+const { sendEmail } = require('../utils/emailService');
+
 const { generateVerificationCode } = require('../utils/helpers'); // optional helper
 
 // ===== User Management =====
