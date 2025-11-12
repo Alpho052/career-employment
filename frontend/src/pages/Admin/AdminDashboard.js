@@ -37,47 +37,36 @@ const AdminDashboard = () => {
 
         <div className="dashboard-grid">
           <Card className="dashboard-card">
-            <h3>Total Students</h3>
-            <div className="dashboard-stats">{stats.totalStudents}</div>
-            <p>Registered Students</p>
+            <h3>Total Users</h3>
+            <div className="dashboard-stats">{stats.totalUsers}</div>
+            <Link to="/admin/users" className="btn btn-outline btn-small">
+              Manage Users
+            </Link>
           </Card>
 
           <Card className="dashboard-card">
             <h3>Institutions</h3>
-            <div className="dashboard-stats">{stats.totalInstitutions}</div>
-            <p>Approved Institutions</p>
+            <div className="dashboard-stats">{stats.institutions}</div>
+            <p>{stats.pendingInstitutions} pending</p>
             <Link to="/admin/institutions" className="btn btn-outline btn-small">
-              Manage
+              Manage Institutions
             </Link>
           </Card>
 
           <Card className="dashboard-card">
             <h3>Companies</h3>
-            <div className="dashboard-stats">{stats.totalCompanies}</div>
-            <p>Approved Companies</p>
+            <div className="dashboard-stats">{stats.companies}</div>
+            <p>{stats.pendingCompanies} pending</p>
             <Link to="/admin/companies" className="btn btn-outline btn-small">
-              Manage
+              Manage Companies
             </Link>
           </Card>
 
           <Card className="dashboard-card">
-            <h3>Active Jobs</h3>
-            <div className="dashboard-stats">{stats.activeJobs}</div>
-            <p>Job Postings</p>
-          </Card>
-
-          <Card className="dashboard-card">
-            <h3>Applications</h3>
-            <div className="dashboard-stats">{stats.totalApplications}</div>
-            <p>Course Applications</p>
-          </Card>
-
-          <Card className="dashboard-card">
-            <h3>Pending Approvals</h3>
-            <div className="dashboard-stats">{stats.pendingInstitutions + stats.pendingCompanies}</div>
-            <p>Awaiting Review</p>
-            <Link to="/admin/institutions?status=pending" className="btn btn-outline btn-small">
-              Review
+            <h3>Jobs</h3>
+            <div className="dashboard-stats">{stats.jobs}</div>
+            <Link to="/admin/jobs" className="btn btn-outline btn-small">
+              Manage Jobs
             </Link>
           </Card>
         </div>
@@ -92,24 +81,7 @@ const AdminDashboard = () => {
           <Link to="/admin/users" className="btn btn-info">
             Manage Users
           </Link>
-          <Link to="/admin/reports" className="btn btn-outline">
-            System Reports
-          </Link>
         </div>
-
-        <Card title="Quick Stats" className="quick-stats">
-          <div className="stats-grid">
-            <div className="stat-item">
-              <strong>Pending Institutions:</strong> {stats.pendingInstitutions}
-            </div>
-            <div className="stat-item">
-              <strong>Pending Companies:</strong> {stats.pendingCompanies}
-            </div>
-            <div className="stat-item">
-              <strong>Total Users:</strong> {stats.totalStudents + stats.totalInstitutions + stats.totalCompanies}
-            </div>
-          </div>
-        </Card>
       </div>
     </div>
   );

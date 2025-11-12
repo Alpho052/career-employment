@@ -85,10 +85,50 @@ const sendVerificationEmail = async (req, res) => {
 };
 
 // =====================================================================
+// ===== SYSTEM STATS (No longer a placeholder) ========================
+// =====================================================================
+
+const getSystemStats = async (req, res) => {
+  try {
+    const usersSnapshot = await db.collection('users').get();
+    const institutionsSnapshot = await db.collection('institutions').get();
+    const companiesSnapshot = await db.collection('companies').get();
+    const jobsSnapshot = await db.collection('jobs').get();
+
+    const totalUsers = usersSnapshot.size;
+    const totalInstitutions = institutionsSnapshot.size;
+    const totalCompanies = companiesSnapshot.size;
+    const totalJobs = jobsSnapshot.size;
+
+    const pendingInstitutions = institutionsSnapshot.docs.filter(doc => doc.data().status === 'pending').length;
+    const approvedInstitutions = totalInstitutions - pendingInstitutions;
+
+    const pendingCompanies = companiesSnapshot.docs.filter(doc => doc.data().status === 'pending').length;
+    const approvedCompanies = totalCompanies - pendingCompanies;
+
+    res.json({
+      success: true,
+      stats: {
+        totalUsers,
+        institutions: totalInstitutions,
+        pendingInstitutions,
+        approvedInstitutions,
+        companies: totalCompanies,
+        pendingCompanies,
+        approvedCompanies,
+        jobs: totalJobs,
+      },
+    });
+  } catch (error) {
+    console.error('❌ Get system stats error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+// =====================================================================
 // ===== PLACEHOLDER CONTROLLERS (to prevent undefined errors) =========
 // =====================================================================
 
-const getSystemStats = (req, res) => res.json({ success: true, message: 'System stats placeholder' });
 const getInstitutions = (req, res) => res.json({ success: true, message: 'Institutions placeholder' });
 const createInstitution = (req, res) => res.json({ success: true, message: 'Create institution placeholder' });
 const updateInstitution = (req, res) => res.json({ success: true, message: 'Update institution placeholder' });
@@ -117,9 +157,9 @@ module.exports = {
   deleteUser,
   getUsers,
   sendVerificationEmail,
+  getSystemStats, // Now correctly implemented
 
   // placeholder controllers
-  getSystemStats,
   getInstitutions,
   createInstitution,
   updateInstitution,
@@ -135,90 +175,3 @@ module.exports = {
   publishAdmissions,
   migrateCompanies,
 };
-
-/*const { db, auth } = require('../config/firebase');
-
-// Delete a user and all their associated data
-const deleteUser = async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userRef = db.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return res.status(404).json({ 
-        success: false, 
-        error: 'User not found' 
-      });
-    }
-
-    const user = userDoc.data();
-
-    // Delete from Firebase Auth
-    await auth.deleteUser(userId);
-
-    // Delete from Firestore
-    await userRef.delete();
-
-    // Delete from role-specific collection
-    if (user.role !== 'admin') {
-      const collectionName = user.role === 'company' ? 'companies' : `${user.role}s`;
-      await db.collection(collectionName).doc(userId).delete();
-    }
-
-    // Optional: Delete related data (e.g., jobs for a company)
-    if (user.role === 'company') {
-      const jobsSnapshot = await db.collection('jobs').where('companyId', '==', userId).get();
-      const deletePromises = jobsSnapshot.docs.map(doc => doc.ref.delete());
-      await Promise.all(deletePromises);
-    }
-
-    res.json({ 
-      success: true, 
-      message: 'User deleted successfully' 
-    });
-
-  } catch (error) {
-    console.error('❌ Delete user error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
-  }
-};
-
-const sendVerificationEmail = async (req, res) => {
-  try {
-    const { email } = req.body;
-    const usersSnapshot = await db.collection('users').where('email', '==', email).get();
-
-    if (usersSnapshot.empty) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
-
-    const userDoc = usersSnapshot.docs[0];
-    const user = userDoc.data();
-
-    if (user.isVerified) {
-      return res.status(400).json({ success: false, error: 'User is already verified' });
-    }
-
-    const verificationCode = generateVerificationCode();
-    await db.collection('users').doc(userDoc.id).update({
-      verificationCode: verificationCode,
-      updatedAt: new Date()
-    });
-
-    await sendEmail(email, verificationCode);
-
-    res.json({ success: true, message: `Verification email sent to ${email}.` });
-
-  } catch (error) {
-    console.error('❌ Send verification email error:', error);
-    res.status(500).json({ success: false, error: 'Internal server error' });
-  }
-};
-
-module.exports = { 
-  deleteUser 
-};*/
