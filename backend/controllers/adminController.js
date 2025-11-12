@@ -1,9 +1,11 @@
 const { db, auth } = require('../config/firebase');
 const { sendEmail } = require('../utils/emailService');
+const { generateVerificationCode } = require('../utils/helpers');
 
-const { generateVerificationCode } = require('../utils/helpers'); // optional helper
+// =====================================================================
+// ===== USER MANAGEMENT ===============================================
+// =====================================================================
 
-// ===== User Management =====
 const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -37,7 +39,21 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// ===== Verification Email =====
+const getUsers = async (req, res) => {
+  try {
+    const snapshot = await db.collection('users').get();
+    const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json({ success: true, users });
+  } catch (error) {
+    console.error('❌ Get users error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+// =====================================================================
+// ===== VERIFICATION EMAIL ============================================
+// =====================================================================
+
 const sendVerificationEmail = async (req, res) => {
   try {
     const { email } = req.body;
@@ -68,11 +84,56 @@ const sendVerificationEmail = async (req, res) => {
   }
 };
 
-// ===== Export all =====
+// =====================================================================
+// ===== PLACEHOLDER CONTROLLERS (to prevent undefined errors) =========
+// =====================================================================
+
+const getSystemStats = (req, res) => res.json({ success: true, message: 'System stats placeholder' });
+const getInstitutions = (req, res) => res.json({ success: true, message: 'Institutions placeholder' });
+const createInstitution = (req, res) => res.json({ success: true, message: 'Create institution placeholder' });
+const updateInstitution = (req, res) => res.json({ success: true, message: 'Update institution placeholder' });
+const updateInstitutionStatus = (req, res) => res.json({ success: true, message: 'Update institution status placeholder' });
+const deleteInstitution = (req, res) => res.json({ success: true, message: 'Delete institution placeholder' });
+
+const getInstitutionCourses = (req, res) => res.json({ success: true, message: 'Institution courses placeholder' });
+const addInstitutionCourse = (req, res) => res.json({ success: true, message: 'Add institution course placeholder' });
+
+const updateCourse = (req, res) => res.json({ success: true, message: 'Update course placeholder' });
+const deleteCourse = (req, res) => res.json({ success: true, message: 'Delete course placeholder' });
+
+const getCompanies = (req, res) => res.json({ success: true, message: 'Companies placeholder' });
+const updateCompanyStatus = (req, res) => res.json({ success: true, message: 'Update company status placeholder' });
+const deleteCompany = (req, res) => res.json({ success: true, message: 'Delete company placeholder' });
+
+const publishAdmissions = (req, res) => res.json({ success: true, message: 'Publish admissions placeholder' });
+const migrateCompanies = (req, res) => res.json({ success: true, message: 'Migrate companies placeholder' });
+
+// =====================================================================
+// ===== EXPORT ========================================================
+// =====================================================================
+
 module.exports = {
+  // main implemented controllers
   deleteUser,
+  getUsers,
   sendVerificationEmail,
-  // add your other controllers here (getUsers, getInstitutions, etc.)
+
+  // placeholder controllers
+  getSystemStats,
+  getInstitutions,
+  createInstitution,
+  updateInstitution,
+  updateInstitutionStatus,
+  deleteInstitution,
+  getInstitutionCourses,
+  addInstitutionCourse,
+  updateCourse,
+  deleteCourse,
+  getCompanies,
+  updateCompanyStatus,
+  deleteCompany,
+  publishAdmissions,
+  migrateCompanies,
 };
 
 /*const { db, auth } = require('../config/firebase');
