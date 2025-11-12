@@ -26,10 +26,12 @@ export const AuthProvider = ({ children }) => {
     if (data.success) {
       localStorage.setItem('token', data.token);
       setCurrentUser(data.user);
-      return data;
+    } else if (data.needsVerification) {
+      localStorage.setItem('emailForVerification', email);
     } else {
       throw new Error(data.error);
     }
+    return data; // Return the full response
   };
 
   // Register function
@@ -45,8 +47,7 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     
     if (data.success) {
-      localStorage.setItem('token', data.token);
-      setCurrentUser(data.user);
+      localStorage.setItem('emailForVerification', userData.email);
       return data;
     } else {
       throw new Error(data.error);
@@ -56,6 +57,7 @@ export const AuthProvider = ({ children }) => {
   // Logout function
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('emailForVerification');
     setCurrentUser(null);
   };
 
@@ -72,8 +74,9 @@ export const AuthProvider = ({ children }) => {
     const data = await response.json();
     
     if (data.success) {
-      // Update user verification status
-      setCurrentUser(prev => ({ ...prev, isVerified: true }));
+      localStorage.setItem('token', data.token);
+      setCurrentUser(data.user);
+      localStorage.removeItem('emailForVerification');
       return data;
     } else {
       throw new Error(data.error);
@@ -94,12 +97,7 @@ export const AuthProvider = ({ children }) => {
         .then(data => {
           if (data.success) {
             setCurrentUser(data.user);
-          } else {
-            localStorage.removeItem('token');
           }
-        })
-        .catch(() => {
-          localStorage.removeItem('token');
         })
         .finally(() => {
           setLoading(false);

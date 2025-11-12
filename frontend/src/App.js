@@ -11,6 +11,7 @@ import LoadingSpinner from './components/common/LoadingSpinner';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import VerifyEmail from './pages/VerifyEmail';
 
 // Student Pages
 import StudentDashboard from './pages/Student/StudentDashboard';
@@ -69,6 +70,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
 
               {/* Student Routes */}
               <Route path="/student/dashboard" element={

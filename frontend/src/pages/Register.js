@@ -14,10 +14,8 @@ const Register = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [verificationStep, setVerificationStep] = useState(false);
-  const [verificationCode, setVerificationCode] = useState('');
   
-  const { register, verifyEmail } = useAuth();
+  const { register } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -45,7 +43,7 @@ const Register = () => {
         additionalData.location = formData.address;
       }
 
-      const result = await register({
+      await register({
         email: formData.email,
         password: formData.password,
         name: formData.name,
@@ -53,156 +51,14 @@ const Register = () => {
         additionalData
       });
 
-      // In development, skip verification and go directly to dashboard
-      if (process.env.NODE_ENV === 'development' || result.user.isVerified) {
-        // Redirect to appropriate dashboard based on role
-        const userRole = result.user?.role;
-        if (userRole === 'student') {
-          navigate('/student/dashboard');
-        } else if (userRole === 'institution') {
-          navigate('/institution/dashboard');
-        } else if (userRole === 'company') {
-          navigate('/company/dashboard');
-        } else if (userRole === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
-      } else {
-        setVerificationStep(true);
-      }
+      navigate('/verify-email');
+
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-
-  const handleVerification = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      const result = await verifyEmail(formData.email, verificationCode);
-      // Redirect to appropriate dashboard based on role
-      const userRole = result.user?.role || formData.role;
-      if (userRole === 'student') {
-        navigate('/student/dashboard');
-      } else if (userRole === 'institution') {
-        navigate('/institution/dashboard');
-      } else if (userRole === 'company') {
-        navigate('/company/dashboard');
-      } else if (userRole === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Development bypass - auto verify and login
-  const handleDevBypass = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/auth/dev-verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email: formData.email }),
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Now try to login with the same credentials
-        const result = await register({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-          role: formData.role,
-          additionalData: {}
-        });
-        // Redirect to appropriate dashboard
-        const userRole = result.user?.role || formData.role;
-        if (userRole === 'student') {
-          navigate('/student/dashboard');
-        } else if (userRole === 'institution') {
-          navigate('/institution/dashboard');
-        } else if (userRole === 'company') {
-          navigate('/company/dashboard');
-        } else if (userRole === 'admin') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
-      } else {
-        setError(data.error);
-      }
-    } catch (err) {
-      setError('Development verification failed: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (verificationStep) {
-    return (
-      <div className="auth-page">
-        <div className="container">
-          <div className="auth-container">
-            <Card title="Verify Your Email" className="auth-card">
-              <p>Please check your email for the verification code.</p>
-              
-              <div className="verification-help">
-                <p><strong>Development Note:</strong> In development mode, emails are not actually sent.</p>
-                <p>Check your server console for the verification code, or use the button below to bypass verification.</p>
-              </div>
-
-              <form onSubmit={handleVerification} className="auth-form">
-                <div className="form-group">
-                  <label htmlFor="verificationCode" className="form-label">Verification Code</label>
-                  <input
-                    type="text"
-                    id="verificationCode"
-                    value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
-                    className="form-control"
-                    required
-                    placeholder="Enter verification code from server console"
-                  />
-                </div>
-
-                <div className="verification-actions">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary btn-full"
-                    disabled={loading}
-                  >
-                    {loading ? 'Verifying...' : 'Verify Email'}
-                  </button>
-                  
-                  <button 
-                    type="button"
-                    className="btn btn-outline btn-full"
-                    onClick={handleDevBypass}
-                    disabled={loading}
-                  >
-                    {loading ? 'Processing...' : 'Development Bypass'}
-                  </button>
-                </div>
-              </form>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="auth-page">
@@ -364,14 +220,6 @@ const Register = () => {
               <p>
                 Already have an account? <Link to="/login">Login here</Link>
               </p>
-            </div>
-
-            <div className="auth-info">
-              <h4>Development Mode</h4>
-              <div className="demo-accounts">
-                <p>In development, accounts are auto-verified and can login immediately.</p>
-                <p>Check server console for verification codes if needed.</p>
-              </div>
             </div>
           </Card>
         </div>

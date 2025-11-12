@@ -28,18 +28,21 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
-      // Redirect to appropriate dashboard based on user role
-      const userRole = result.user?.role;
-      if (userRole === 'student') {
-        navigate('/student/dashboard');
-      } else if (userRole === 'institution') {
-        navigate('/institution/dashboard');
-      } else if (userRole === 'company') {
-        navigate('/company/dashboard');
-      } else if (userRole === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/');
+      if (result.needsVerification) {
+        navigate('/verify-email');
+      } else if (result.success) {
+        const userRole = result.user?.role;
+        if (userRole === 'student') {
+          navigate('/student/dashboard');
+        } else if (userRole === 'institution') {
+          navigate('/institution/dashboard');
+        } else if (userRole === 'company') {
+          navigate('/company/dashboard');
+        } else if (userRole === 'admin') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/');
+        }
       }
     } catch (err) {
       setError(err.message);
