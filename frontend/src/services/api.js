@@ -104,6 +104,7 @@ export const adminAPI = {
   updateCompanyStatus: (companyId, status) => api.put(`/admin/companies/${companyId}/status`, { status }),
   deleteCompany: (companyId) => api.delete(`/admin/companies/${companyId}`),
   getUsers: (role) => api.get(`/admin/users${role ? `?role=${role}` : ''}`),
+  deleteUser: (userId) => api.delete(`/admin/users/${userId}`),
   publishAdmissions: (action, institutionId) => api.post('/admin/admissions/publish', { action, institutionId }),
 };
 

@@ -9,23 +9,26 @@ const register = async (req, res) => {
   try {
     const { email, password, name, role, additionalData } = req.body;
 
-    const userExists = await auth.getUserByEmail(email).catch(() => null);
-    if (userExists) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'User already exists with this email' 
+    let userRecord;
+    try {
+      userRecord = await auth.createUser({
+        email,
+        password,
+        displayName: name,
+        emailVerified: false
       });
+    } catch (error) {
+      if (error.code === 'auth/email-already-exists') {
+        return res.status(400).json({ 
+          success: false,
+          error: 'User already exists with this email' 
+        });
+      }
+      throw error;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const verificationCode = generateVerificationCode();
-
-    const userRecord = await auth.createUser({
-      email,
-      password: hashedPassword,
-      displayName: name,
-      emailVerified: false
-    });
 
     const userData = {
       uid: userRecord.uid,

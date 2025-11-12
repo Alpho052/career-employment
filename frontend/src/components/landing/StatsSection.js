@@ -21,11 +21,7 @@ const StatsSection = () => {
     fetchStats();
   }, []);
 
-  const statItems = [
-    { label: 'Institutions', value: stats.institutions || 0 },
-    { label: 'Companies', value: stats.companies || 0 },
-    { label: 'Jobs Available', value: stats.jobs || 0 }
-  ];
+  const statItems = [];
 
   return (
     <section className="stats-section">
