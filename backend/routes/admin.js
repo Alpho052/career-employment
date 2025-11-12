@@ -16,7 +16,8 @@ const {
   deleteCompany,
   getUsers,
   publishAdmissions,
-  migrateCompanies
+  migrateCompanies,
+  sendVerificationEmail
 } = require('../controllers/adminController');
 const { authenticate, authorize } = require('../middleware/auth');
 
@@ -55,6 +56,9 @@ router.post('/migrate/companies', migrateCompanies);
 
 // User management
 router.get('/users', getUsers);
+
+// Email verification
+router.post('/send-verification-email', sendVerificationEmail);
 
 // Test route
 router.get('/test', (req, res) => {
