@@ -70,9 +70,9 @@ router.get('/test', (req, res) => {
 });
 
 module.exports = router;*/
-
 const express = require('express');
 const router = express.Router();
+
 const {
   getSystemStats,
   getInstitutions,
@@ -87,10 +87,10 @@ const {
   getCompanies,
   updateCompanyStatus,
   deleteCompany,
-  getUsers,
   publishAdmissions,
   migrateCompanies,
-  deleteUser
+  getUsers,
+  deleteUser,
 } = require('../controllers/adminController');
 
 const { authenticate, authorize } = require('../middleware/auth');
@@ -142,3 +142,5 @@ router.get('/test', (req, res) => {
 });
 
 module.exports = router;
+
+
