@@ -6,10 +6,10 @@ const { generateVerificationCode } = require('../utils/helpers');
 
 // User registration
 const register = async (req, res) => {
+  let userRecord;
   try {
     const { email, password, name, role, additionalData } = req.body;
 
-    let userRecord;
     try {
       userRecord = await auth.createUser({
         email,
@@ -19,11 +19,9 @@ const register = async (req, res) => {
       });
     } catch (error) {
       if (error.code === 'auth/email-already-exists') {
-        return res.status(400).json({ 
-          success: false,
-          error: 'User already exists with this email' 
-        });
+        return res.status(400).json({ success: false, error: 'User already exists with this email' });
       }
+      // Re-throw other auth errors to be caught by the main catch block
       throw error;
     }
 
@@ -70,10 +68,34 @@ const register = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Registration error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
+
+    // If the user was created in Auth but something failed after, delete the Auth user to allow re-registration.
+    if (userRecord && userRecord.uid) {
+      try {
+        await auth.deleteUser(userRecord.uid);
+        console.log(`🧹 Cleaned up partially created user: ${userRecord.uid}`);
+      } catch (cleanupError) {
+        console.error(`❌ Failed to clean up user ${userRecord.uid}:`, cleanupError);
+      }
+    }
+
+    // Provide a more specific error message based on the error source
+    if (error.message.includes('email')) {
+      res.status(500).json({ 
+        success: false,
+        error: 'Registration failed due to an email error. Please ensure your email credentials in the .env file are correct and try again.' 
+      });
+    } else if (error.code && error.code.startsWith('auth/')) {
+      res.status(500).json({ 
+        success: false,
+        error: 'Registration failed due to an authentication error. Please check your Firebase project credentials.' 
+      });
+    } else {
+      res.status(500).json({ 
+        success: false,
+        error: 'An internal server error occurred. Please check the server logs for details.' 
+      });
+    }
   }
 };
 
@@ -84,20 +106,14 @@ const verifyEmail = async (req, res) => {
     const usersSnapshot = await db.collection('users').where('email', '==', email).get();
 
     if (usersSnapshot.empty) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'User not found' 
-      });
+      return res.status(400).json({ success: false, error: 'User not found' });
     }
 
     const userDoc = usersSnapshot.docs[0];
     const user = userDoc.data();
 
     if (user.verificationCode !== verificationCode) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Invalid verification code' 
-      });
+      return res.status(400).json({ success: false, error: 'Invalid verification code' });
     }
 
     await auth.updateUser(user.uid, { emailVerified: true });
@@ -122,10 +138,7 @@ const verifyEmail = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Email verification error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -136,19 +149,13 @@ const resendVerification = async (req, res) => {
     const usersSnapshot = await db.collection('users').where('email', '==', email).get();
 
     if (usersSnapshot.empty) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'User not found' 
-      });
+      return res.status(400).json({ success: false, error: 'User not found' });
     }
 
     const user = usersSnapshot.docs[0].data();
 
     if (user.isVerified) {
-      return res.status(400).json({ 
-        success: false,
-        error: 'Email is already verified' 
-      });
+      return res.status(400).json({ success: false, error: 'Email is already verified' });
     }
 
     await sendVerificationEmail(email, user.verificationCode);
@@ -160,10 +167,7 @@ const resendVerification = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Resend verification error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -174,10 +178,7 @@ const login = async (req, res) => {
     const usersSnapshot = await db.collection('users').where('email', '==', email).get();
 
     if (usersSnapshot.empty) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid credentials' 
-      });
+      return res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
 
     const userDoc = usersSnapshot.docs[0];
@@ -185,25 +186,15 @@ const login = async (req, res) => {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Invalid credentials' 
-      });
+      return res.status(400).json({ success: false, error: 'Invalid credentials' });
     }
 
     if (!user.isVerified) {
-      return res.status(401).json({ 
-        success: false, 
-        error: 'Email not verified', 
-        needsVerification: true 
-      });
+      return res.status(401).json({ success: false, error: 'Email not verified', needsVerification: true });
     }
 
     if (user.status !== 'active') {
-      return res.status(403).json({ 
-        success: false, 
-        error: 'Account is not active. Please contact support.' 
-      });
+      return res.status(403).json({ success: false, error: 'Account is not active. Please contact support.' });
     }
 
     const token = jwt.sign(
@@ -221,10 +212,7 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('❌ Login error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: 'Internal server error' 
-    });
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
