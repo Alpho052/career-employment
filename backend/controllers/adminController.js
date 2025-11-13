@@ -26,27 +26,26 @@ const deleteUser = async (req, res) => {
       await auth.deleteUser(userId);
     } catch (error) {
       if (error.code === 'auth/user-not-found') {
-        console.warn(`User ${userId} not found in Firebase Auth, but was found in the database. Proceeding with database cleanup.`);
+        console.warn(`User ${userId} not found in Firebase Auth, proceeding with cleanup.`);
       } else {
-        // For other auth errors, we should stop and report the problem.
         throw new Error(`Firebase Auth Error: ${error.message}`);
       }
     }
 
-    // 2. Delete from the main 'users' collection
+    // 2. Delete from 'users' collection
     await userRef.delete();
 
-    // 3. Delete from the role-specific collection (companies, institutions, etc.)
+    // 3. Delete from role-specific collection
     if (user.role && user.role !== 'admin') {
       try {
         const collectionName = user.role === 'company' ? 'companies' : `${user.role}s`;
         await db.collection(collectionName).doc(userId).delete();
       } catch (error) {
-        console.warn(`Could not delete user from role collection '${user.role}':`, error);
+        console.warn(`Could not delete from ${user.role} collection:`, error);
       }
     }
 
-    // 4. If the user is a company, delete their associated jobs
+    // 4. Delete jobs if company
     if (user.role === 'company') {
       const jobsSnapshot = await db.collection('jobs').where('companyId', '==', userId).get();
       if (!jobsSnapshot.empty) {
@@ -55,16 +54,11 @@ const deleteUser = async (req, res) => {
       }
     }
 
-    res.json({ success: true, message: 'User and all associated data deleted successfully' });
+    res.json({ success: true, message: 'User and associated data deleted successfully' });
 
   } catch (error) {
     console.error('❌ Error in deleteUser controller:', error);
-
-    // Send a more informative error message to the client
-    res.status(500).json({ 
-      success: false, 
-      error: error.message 
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -78,7 +72,6 @@ const getUsers = async (req, res) => {
     res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
-
 
 // =====================================================================
 // ===== INSTITUTIONS & COMPANIES ======================================
@@ -115,57 +108,74 @@ const getCompanies = async (req, res) => {
 };
 
 const updateInstitutionStatus = async (req, res) => {
-    try {
-        const { institutionId } = req.params;
-        const { status } = req.body;
+  try {
+    const { institutionId } = req.params;
+    const { status } = req.body;
 
-        if (!['approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ success: false, error: 'Invalid status' });
-        }
-
-        const institutionRef = db.collection('institutions').doc(institutionId);
-        const institutionDoc = await institutionRef.get();
-
-        if (!institutionDoc.exists) {
-            return res.status(404).json({ success: false, error: 'Institution not found' });
-        }
-
-        await institutionRef.update({ status, updatedAt: new Date() });
-
-        res.json({ success: true, message: `Institution status updated to ${status}` });
-
-    } catch (error) {
-        console.error('Error updating institution status:', error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status' });
     }
+
+    const institutionRef = db.collection('institutions').doc(institutionId);
+    const institutionDoc = await institutionRef.get();
+
+    if (!institutionDoc.exists) {
+      return res.status(404).json({ success: false, error: 'Institution not found' });
+    }
+
+    await institutionRef.update({ status, updatedAt: new Date() });
+
+    res.json({ success: true, message: `Institution status updated to ${status}` });
+  } catch (error) {
+    console.error('Error updating institution status:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 };
 
 const updateCompanyStatus = async (req, res) => {
-    try {
-        const { companyId } = req.params;
-        const { status } = req.body;
+  try {
+    const { companyId } = req.params;
+    const { status } = req.body;
 
-        if (!['approved', 'rejected'].includes(status)) {
-            return res.status(400).json({ success: false, error: 'Invalid status' });
-        }
-
-        const companyRef = db.collection('companies').doc(companyId);
-        const companyDoc = await companyRef.get();
-
-        if (!companyDoc.exists) {
-            return res.status(404).json({ success: false, error: 'Company not found' });
-        }
-
-        await companyRef.update({ status, updatedAt: new Date() });
-
-        res.json({ success: true, message: `Company status updated to ${status}` });
-
-    } catch (error) {
-        console.error('Error updating company status:', error);
-        res.status(500).json({ success: false, error: 'Internal server error' });
+    if (!['approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status' });
     }
+
+    const companyRef = db.collection('companies').doc(companyId);
+    const companyDoc = await companyRef.get();
+
+    if (!companyDoc.exists) {
+      return res.status(404).json({ success: false, error: 'Company not found' });
+    }
+
+    await companyRef.update({ status, updatedAt: new Date() });
+
+    res.json({ success: true, message: `Company status updated to ${status}` });
+  } catch (error) {
+    console.error('Error updating company status:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
 };
 
+// =====================================================================
+// ===== PLACEHOLDER CONTROLLERS (so routes don’t break) ===============
+// =====================================================================
+
+const getSystemStats = async (req, res) => res.json({ success: true, message: 'System stats not implemented yet' });
+const createInstitution = async (req, res) => res.json({ success: true, message: 'Create institution not implemented yet' });
+const updateInstitution = async (req, res) => res.json({ success: true, message: 'Update institution not implemented yet' });
+const deleteInstitution = async (req, res) => res.json({ success: true, message: 'Delete institution not implemented yet' });
+const getInstitutionCourses = async (req, res) => res.json({ success: true, message: 'Get institution courses not implemented yet' });
+const addInstitutionCourse = async (req, res) => res.json({ success: true, message: 'Add institution course not implemented yet' });
+const updateCourse = async (req, res) => res.json({ success: true, message: 'Update course not implemented yet' });
+const deleteCourse = async (req, res) => res.json({ success: true, message: 'Delete course not implemented yet' });
+const deleteCompany = async (req, res) => res.json({ success: true, message: 'Delete company not implemented yet' });
+const publishAdmissions = async (req, res) => res.json({ success: true, message: 'Publish admissions not implemented yet' });
+const migrateCompanies = async (req, res) => res.json({ success: true, message: 'Migrate companies not implemented yet' });
+
+// =====================================================================
+// ===== EXPORTS =======================================================
+// =====================================================================
 
 module.exports = {
   deleteUser,
@@ -173,5 +183,16 @@ module.exports = {
   getInstitutions,
   getCompanies,
   updateInstitutionStatus,
-  updateCompanyStatus
+  updateCompanyStatus,
+  getSystemStats,
+  createInstitution,
+  updateInstitution,
+  deleteInstitution,
+  getInstitutionCourses,
+  addInstitutionCourse,
+  updateCourse,
+  deleteCourse,
+  deleteCompany,
+  publishAdmissions,
+  migrateCompanies
 };
