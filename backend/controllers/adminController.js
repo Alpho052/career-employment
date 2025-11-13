@@ -5,56 +5,70 @@ const { db, auth } = require('../config/firebase');
 // =====================================================================
 
 const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    return res.status(400).json({ success: false, error: 'User ID is required' });
+  }
+
+  const userRef = db.collection('users').doc(userId);
+
   try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ success: false, error: 'User ID is required' });
-    }
-
-    const userRef = db.collection('users').doc(userId);
     const userDoc = await userRef.get();
-
     if (!userDoc.exists) {
-      return res.status(404).json({ success: false, error: 'User not found in database' });
+      return res.status(404).json({ success: false, error: 'User not found in the database.' });
     }
-
     const user = userDoc.data();
 
-    // Delete from Firebase Auth
+    // 1. Delete from Firebase Authentication
     try {
       await auth.deleteUser(userId);
     } catch (error) {
+      // If user is already gone from Auth, it's not a fatal error. Log it and continue cleanup.
       if (error.code === 'auth/user-not-found') {
-        console.warn(`User ${userId} not found in Firebase Auth, continuing...`);
+        console.warn(`User ${userId} was not found in Firebase Authentication. Continuing cleanup from database.`);
       } else {
-        throw new Error(`Firebase Auth Error: ${error.message}`);
+        // For any other auth-related error, stop immediately and report it.
+        console.error('❌ Firebase Auth Deletion Error:', error);
+        return res.status(500).json({
+          success: false,
+          error: `Failed to delete user from Authentication: ${error.message}. This could be a permissions issue with the service account.`
+        });
       }
     }
 
+    // 2. Delete from Firestore 'users' collection
     await userRef.delete();
 
+    // 3. Delete from role-specific collection (e.g., 'companies', 'students')
     if (user.role && user.role !== 'admin') {
       const collectionName = user.role === 'company' ? 'companies' : `${user.role}s`;
-      try {
-        await db.collection(collectionName).doc(userId).delete();
-      } catch (error) {
-        console.warn(`Could not delete from ${collectionName}:`, error);
+      const roleDocRef = db.collection(collectionName).doc(userId);
+      if ((await roleDocRef.get()).exists) {
+        await roleDocRef.delete();
       }
     }
 
+    // 4. If the user was a company, delete their associated jobs
     if (user.role === 'company') {
       const jobsSnapshot = await db.collection('jobs').where('companyId', '==', userId).get();
-      const deletePromises = jobsSnapshot.docs.map(doc => doc.ref.delete());
-      await Promise.all(deletePromises);
+      if (!jobsSnapshot.empty) {
+        const batch = db.batch();
+        jobsSnapshot.docs.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      }
     }
 
-    res.json({ success: true, message: 'User and related data deleted successfully' });
+    return res.json({ success: true, message: 'User and all related data deleted successfully.' });
+
   } catch (error) {
-    console.error('❌ Error in deleteUser:', error);
-    res.status(500).json({ success: false, error: error.message });
+    console.error(`❌ Unexpected error in deleteUser for userID: ${userId}:`, error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'An unexpected server error occurred during user deletion. Please check the server logs.' 
+    });
   }
 };
+
 
 const getUsers = async (req, res) => {
   try {
@@ -178,4 +192,3 @@ module.exports = {
   getUsers,
   deleteUser,
 };
-
