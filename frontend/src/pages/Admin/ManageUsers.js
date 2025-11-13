@@ -17,7 +17,8 @@ const ManageUsers = () => {
       const data = await adminAPI.getUsers();
       setUsers(data.users || []);
     } catch (error) {
-      setError('Error fetching users: ' + (error.message || error));
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch users.';
+      setError(`Error fetching users: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,8 @@ const ManageUsers = () => {
       await adminAPI.deleteUser(userId);
       fetchAllUsers(); // Refresh the list
     } catch (error) {
-      setError('Error deleting user: ' + (error.message || error));
+      const errorMessage = error.response?.data?.error || error.message || 'An unexpected error occurred.';
+      setError(`Error deleting user: ${errorMessage}`);
     }
   };
 
