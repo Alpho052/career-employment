@@ -8,18 +8,20 @@ const ManageCompanies = () => {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [message, setMessage] = useState('');
 
   useEffect(() => {
     fetchCompanies();
   }, [filter]);
 
   const fetchCompanies = async () => {
+    setLoading(true);
     try {
       const status = filter === 'all' ? null : filter;
       const data = await adminAPI.getCompanies(status);
       setCompanies(data.companies || []);
     } catch (error) {
-      console.error('Error fetching companies:', error);
+      setMessage('Error fetching companies: ' + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -27,11 +29,13 @@ const ManageCompanies = () => {
 
   const updateCompanyStatus = async (companyId, newStatus) => {
     setUpdating(true);
+    setMessage('');
     try {
       await adminAPI.updateCompanyStatus(companyId, newStatus);
       await fetchCompanies();
+      setMessage('Company status updated successfully.');
     } catch (error) {
-      console.error('Error updating company:', error);
+      setMessage('Error updating company: ' + (error.message || error));
     } finally {
       setUpdating(false);
     }
@@ -42,12 +46,13 @@ const ManageCompanies = () => {
       return;
     }
     setUpdating(true);
+    setMessage('');
     try {
       await adminAPI.deleteCompany(companyId);
       await fetchCompanies();
+      setMessage('Company deleted successfully.');
     } catch (error) {
-      console.error('Error deleting company:', error);
-      alert('Error deleting company: ' + (error.message || error));
+      setMessage('Error deleting company: ' + (error.message || error));
     } finally {
       setUpdating(false);
     }
@@ -76,12 +81,13 @@ const ManageCompanies = () => {
         </div>
 
         <Card title="Companies">
-          <div className="filter-section">
+          <div className="filter-section" style={{ marginBottom: '20px' }}>
             <label>Filter by status:</label>
             <select 
               className="form-control"
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
+              style={{ marginLeft: '10px', display: 'inline-block', width: 'auto' }}
             >
               <option value="all">All Companies</option>
               <option value="pending">Pending Approval</option>
@@ -90,6 +96,12 @@ const ManageCompanies = () => {
               <option value="rejected">Rejected</option>
             </select>
           </div>
+
+          {message && (
+            <div className={`alert ${message.includes('Error') ? 'alert-error' : 'alert-success'}`} style={{ marginBottom: '15px' }}>
+              {message}
+            </div>
+          )}
 
           {companies.length === 0 ? (
             <div className="no-companies">
@@ -105,26 +117,12 @@ const ManageCompanies = () => {
                       <h4>{company.name}</h4>
                       <p>Email: {company.email}</p>
                       <p>Industry: {company.industry || 'Not specified'}</p>
-                      <p>Location: {company.location || 'Not specified'}</p>
                     </div>
                     <div className="company-status">
                       <span className={`status ${getStatusColor(company.status)}`}>
                         {company.status}
                       </span>
                     </div>
-                  </div>
-
-                  <div className="company-details">
-                    <p><strong>Registered:</strong> {new Date(company.createdAt).toLocaleDateString()}</p>
-                    {company.contactEmail && (
-                      <p><strong>Contact:</strong> {company.contactEmail}</p>
-                    )}
-                    {company.phone && (
-                      <p><strong>Phone:</strong> {company.phone}</p>
-                    )}
-                    {company.size && (
-                      <p><strong>Size:</strong> {company.size} employees</p>
-                    )}
                   </div>
 
                   <div className="company-actions">

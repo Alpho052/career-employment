@@ -85,7 +85,7 @@ const sendVerificationEmail = async (req, res) => {
 };
 
 // =====================================================================
-// ===== SYSTEM STATS (No longer a placeholder) ========================
+// ===== SYSTEM STATS ==================================================
 // =====================================================================
 
 const getSystemStats = async (req, res) => {
@@ -95,28 +95,15 @@ const getSystemStats = async (req, res) => {
     const companiesSnapshot = await db.collection('companies').get();
     const jobsSnapshot = await db.collection('jobs').get();
 
-    const totalUsers = usersSnapshot.size;
-    const totalInstitutions = institutionsSnapshot.size;
-    const totalCompanies = companiesSnapshot.size;
-    const totalJobs = jobsSnapshot.size;
-
-    const pendingInstitutions = institutionsSnapshot.docs.filter(doc => doc.data().status === 'pending').length;
-    const approvedInstitutions = totalInstitutions - pendingInstitutions;
-
-    const pendingCompanies = companiesSnapshot.docs.filter(doc => doc.data().status === 'pending').length;
-    const approvedCompanies = totalCompanies - pendingCompanies;
-
     res.json({
       success: true,
       stats: {
-        totalUsers,
-        institutions: totalInstitutions,
-        pendingInstitutions,
-        approvedInstitutions,
-        companies: totalCompanies,
-        pendingCompanies,
-        approvedCompanies,
-        jobs: totalJobs,
+        totalUsers: usersSnapshot.size,
+        institutions: institutionsSnapshot.size,
+        pendingInstitutions: institutionsSnapshot.docs.filter(doc => doc.data().status === 'pending').length,
+        companies: companiesSnapshot.size,
+        pendingCompanies: companiesSnapshot.docs.filter(doc => doc.data().status === 'pending').length,
+        jobs: jobsSnapshot.size,
       },
     });
   } catch (error) {
@@ -126,10 +113,44 @@ const getSystemStats = async (req, res) => {
 };
 
 // =====================================================================
+// ===== INSTITUTIONS & COMPANIES ======================================
+// =====================================================================
+
+const getInstitutions = async (req, res) => {
+  try {
+    let query = db.collection('institutions');
+    if (req.query.status) {
+      query = query.where('status', '==', req.query.status);
+    }
+    const snapshot = await query.get();
+    const institutions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json({ success: true, institutions });
+  } catch (error) {
+    console.error('❌ Get institutions error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+const getCompanies = async (req, res) => {
+  try {
+    let query = db.collection('companies');
+    if (req.query.status) {
+      query = query.where('status', '==', req.query.status);
+    }
+    const snapshot = await query.get();
+    const companies = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    res.json({ success: true, companies });
+  } catch (error) {
+    console.error('❌ Get companies error:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+
+// =====================================================================
 // ===== PLACEHOLDER CONTROLLERS (to prevent undefined errors) =========
 // =====================================================================
 
-const getInstitutions = (req, res) => res.json({ success: true, message: 'Institutions placeholder' });
 const createInstitution = (req, res) => res.json({ success: true, message: 'Create institution placeholder' });
 const updateInstitution = (req, res) => res.json({ success: true, message: 'Update institution placeholder' });
 const updateInstitutionStatus = (req, res) => res.json({ success: true, message: 'Update institution status placeholder' });
@@ -141,7 +162,6 @@ const addInstitutionCourse = (req, res) => res.json({ success: true, message: 'A
 const updateCourse = (req, res) => res.json({ success: true, message: 'Update course placeholder' });
 const deleteCourse = (req, res) => res.json({ success: true, message: 'Delete course placeholder' });
 
-const getCompanies = (req, res) => res.json({ success: true, message: 'Companies placeholder' });
 const updateCompanyStatus = (req, res) => res.json({ success: true, message: 'Update company status placeholder' });
 const deleteCompany = (req, res) => res.json({ success: true, message: 'Delete company placeholder' });
 
@@ -153,13 +173,10 @@ const migrateCompanies = (req, res) => res.json({ success: true, message: 'Migra
 // =====================================================================
 
 module.exports = {
-  // main implemented controllers
   deleteUser,
   getUsers,
   sendVerificationEmail,
-  getSystemStats, // Now correctly implemented
-
-  // placeholder controllers
+  getSystemStats,
   getInstitutions,
   createInstitution,
   updateInstitution,
