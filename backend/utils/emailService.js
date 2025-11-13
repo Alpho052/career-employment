@@ -6,13 +6,18 @@ let transporter;
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
   try {
     transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Use SSL
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
       },
+      // Add connection timeouts for faster feedback
+      connectionTimeout: 10000, // 10 seconds
+      socketTimeout: 10000, // 10 seconds
     });
-    console.log('✅ Email service configured successfully.');
+    console.log('✅ Email service re-configured for explicit SSL on port 465.');
   } catch (error) {
     console.error('⚠️ Email service configuration failed:', error);
     transporter = null;
@@ -26,7 +31,6 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 const sendVerificationEmail = async (email, verificationCode) => {
   if (!transporter) {
     console.error('❌ Cannot send email because the email service is not configured.');
-    // In a real-world scenario, you'd want to throw an error to give feedback to the user
     throw new Error('The email service is not working. Please contact support.');
   }
 
