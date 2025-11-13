@@ -157,25 +157,6 @@ const updateCompanyStatus = async (req, res) => {
   }
 };
 
-// =====================================================================
-// ===== PLACEHOLDER CONTROLLERS (so routes don’t break) ===============
-// =====================================================================
-
-const getSystemStats = async (req, res) => res.json({ success: true, message: 'System stats not implemented yet' });
-const createInstitution = async (req, res) => res.json({ success: true, message: 'Create institution not implemented yet' });
-const updateInstitution = async (req, res) => res.json({ success: true, message: 'Update institution not implemented yet' });
-const deleteInstitution = async (req, res) => res.json({ success: true, message: 'Delete institution not implemented yet' });
-const getInstitutionCourses = async (req, res) => res.json({ success: true, message: 'Get institution courses not implemented yet' });
-const addInstitutionCourse = async (req, res) => res.json({ success: true, message: 'Add institution course not implemented yet' });
-const updateCourse = async (req, res) => res.json({ success: true, message: 'Update course not implemented yet' });
-const deleteCourse = async (req, res) => res.json({ success: true, message: 'Delete course not implemented yet' });
-const deleteCompany = async (req, res) => res.json({ success: true, message: 'Delete company not implemented yet' });
-const publishAdmissions = async (req, res) => res.json({ success: true, message: 'Publish admissions not implemented yet' });
-const migrateCompanies = async (req, res) => res.json({ success: true, message: 'Migrate companies not implemented yet' });
-
-// =====================================================================
-// ===== EXPORTS =======================================================
-// =====================================================================
 
 module.exports = {
   deleteUser,
@@ -183,16 +164,5 @@ module.exports = {
   getInstitutions,
   getCompanies,
   updateInstitutionStatus,
-  updateCompanyStatus,
-  getSystemStats,
-  createInstitution,
-  updateInstitution,
-  deleteInstitution,
-  getInstitutionCourses,
-  addInstitutionCourse,
-  updateCourse,
-  deleteCourse,
-  deleteCompany,
-  publishAdmissions,
-  migrateCompanies
+  updateCompanyStatus
 };
