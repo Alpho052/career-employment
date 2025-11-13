@@ -63,7 +63,7 @@ const deleteUser = async (req, res) => {
     // Send a more informative error message to the client
     res.status(500).json({ 
       success: false, 
-      error: `An unexpected error occurred during user deletion: ${error.message}` 
+      error: error.message 
     });
   }
 };
@@ -81,7 +81,7 @@ const getUsers = async (req, res) => {
 
 
 // =====================================================================
-// ===== INSTITUTIONS & COMPANIES ======================================
+// ===== INSTITUTIONS & COMPANIES =====================================
 // =====================================================================
 
 const getInstitutions = async (req, res) => {
